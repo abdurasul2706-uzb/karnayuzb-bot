@@ -3,7 +3,6 @@ import logging
 import requests
 import random
 import io
-import re
 from datetime import datetime
 from bs4 import BeautifulSoup
 from PIL import Image, ImageDraw, ImageFont
@@ -11,9 +10,8 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.types import BufferedInputFile
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from googletrans import Translator
-from aiohttp import web
 
-# --- ASOSIY SOZLAMALAR ---
+# --- KONFIGURATSIYA ---
 TOKEN = "8222976736:AAEHmKeTga27Fq2YnUlK4ld1x0DVtWdb5gs"
 CHANNEL_ID = "@karnayuzb"
 
@@ -22,130 +20,128 @@ dp = Dispatcher()
 scheduler = AsyncIOScheduler(timezone="Asia/Tashkent")
 translator = Translator()
 
-# HUDUDLAR KOORDINATALARI (Ob-havo va Namoz uchun)
+# HUDUDLAR RO'YXATI
 HUDUDLAR = {
-    "TOSHKENT": {"lat": 41.29, "lon": 69.24}, "NUKUS": {"lat": 42.46, "lon": 59.61},
-    "ANDIJON": {"lat": 40.78, "lon": 72.35}, "BUXORO": {"lat": 39.77, "lon": 64.42},
-    "GULISTON": {"lat": 40.48, "lon": 68.78}, "JIZZAX": {"lat": 40.11, "lon": 67.84},
-    "NAVOIY": {"lat": 40.10, "lon": 65.37}, "NAMANGAN": {"lat": 41.00, "lon": 71.66},
-    "SAMARQAND": {"lat": 39.65, "lon": 66.95}, "TERMIZ": {"lat": 37.22, "lon": 67.27},
-    "FARG'ONA": {"lat": 40.38, "lon": 71.78}, "URGANCH": {"lat": 41.55, "lon": 60.63},
-    "QARSHI": {"lat": 38.86, "lon": 65.78}
+    "Toshkent": {"lat": 41.29, "lon": 69.24}, "Nukus": {"lat": 42.46, "lon": 59.61},
+    "Andijon": {"lat": 40.78, "lon": 72.35}, "Buxoro": {"lat": 39.77, "lon": 64.42},
+    "Jizzax": {"lat": 40.11, "lon": 67.84}, "Qarshi": {"lat": 38.86, "lon": 65.78},
+    "Navoiy": {"lat": 40.10, "lon": 65.37}, "Namangan": {"lat": 41.00, "lon": 71.66},
+    "Samarqand": {"lat": 39.65, "lon": 66.95}, "Guliston": {"lat": 40.48, "lon": 68.78},
+    "Termiz": {"lat": 37.22, "lon": 67.27}, "Farg'ona": {"lat": 40.38, "lon": 71.78},
+    "Urganch": {"lat": 41.55, "lon": 60.63}
 }
 
-# --- MEGA INFOGRAFIKA GENERATORI (Yozuvlar 300% kattalashtirilgan) ---
-def create_mega_infographic(title, data, footer, theme="#0f172a"):
-    width = 1300 # Rasm kengligini oshirdik
-    row_h = 140  # Har bir qator balandligi
-    height = 600 + (len(data) * row_h)
-    img = Image.new('RGB', (width, height), color=theme)
+# --- YORDAMCHI FUNKSIYALAR ---
+
+def create_mega_image(title, data_dict, footer_text):
+    """Katta shriftli va HD sifatli infografika yaratish"""
+    width, height = 1200, 1600
+    img = Image.new('RGB', (width, height), color='#0f172a')
     draw = ImageDraw.Draw(img)
     
     try:
-        # Render.com da shrift bo'lmasa xato bermasligi uchun load_default bor
-        f_title = ImageFont.truetype("arial.ttf", 100)
-        f_main = ImageFont.truetype("arial.ttf", 65) # JUDA KATTA YOZUV
-        f_footer = ImageFont.truetype("arial.ttf", 50)
+        # Shriftlar (Render serverida arial bo'lmasa, standart yuklanadi)
+        title_font = ImageFont.truetype("arial.ttf", 80)
+        main_font = ImageFont.truetype("arial.ttf", 55) # 55 - juda katta shrift
+        footer_font = ImageFont.truetype("arial.ttf", 40)
     except:
-        f_title = ImageFont.load_default(); f_main = ImageFont.load_default(); f_footer = ImageFont.load_default()
+        title_font = ImageFont.load_default()
+        main_font = ImageFont.load_default()
+        footer_font = ImageFont.load_default()
 
-    # Sarlavha foni
-    draw.rectangle([0, 0, width, 320], fill="#1e293b")
-    draw.text((width/2, 160), title, fill="#38bdf8", font=f_title, anchor="mm")
+    draw.text((width/2, 100), title, fill="#38bdf8", font=title_font, anchor="mm")
     
-    y = 400
-    for key, val in data.items():
-        draw.text((80, y), f"• {key}", fill="#f8fafc", font=f_main)
-        draw.text((width-80, y), str(val), fill="#fbbf24", font=f_main, anchor="ra")
-        draw.line((80, y+100, width-80, y+100), fill="#334155", width=5)
-        y += row_h
-
-    draw.text((width/2, height-100), footer, fill="#94a3b8", font=f_footer, anchor="mm")
-    buf = io.BytesIO(); img.save(buf, format='PNG'); buf.seek(0)
+    y_pos = 250
+    for key, val in data_dict.items():
+        draw.text((100, y_pos), f"• {key}:", fill="#f8fafc", font=main_font)
+        draw.text((width-100, y_pos), str(val), fill="#fbbf24", font=main_font, anchor="ra")
+        y_pos += 90
+        draw.line((100, y_pos-10, width-100, y_pos-10), fill="#334155", width=2)
+    
+    draw.text((width/2, height-80), footer_text, fill="#94a3b8", font=footer_font, anchor="mm")
+    
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
     return buf
 
-# --- RUKNLAR FUNKSIYASI ---
+# --- ASOSIY VAZIFALAR ---
 
 async def job_morning():
-    try:
-        res = requests.get(f"http://api.aladhan.com/v1/gToH?date={datetime.now().strftime('%d-%m-%Y')}").json()
-        h = res['data']['hijri']
-        hijri = f"{h['day']} {h['month']['en']} {h['year']}-yil"
-        weekdays = ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba"]
-        tilaklar = [
-            "Assalomu alaykum! Bugungi kuningiz mo'jizalarga boy bo'lsin. Har bir qadamingizda omad, har bir nafasingizda baxt hamroh bo'lsin!",
-            "Xayrli tong! Sizga sihat-salomatlik, oilaviy xotirjamlik va bitmas-tuganmas baraka tilaymiz. Kuningiz samarali o'tsin!",
-            "G'animat tong muborak! Qalbingiz nurga, xonadoningiz fayzga to'lsin. Ezgu niyatlaringiz ijobat bo'lishini tilaymiz!"
-        ]
-        msg = (f"☀️ **XAYRLI TONG, QADRLI OBUNACHI!**\n\n📅 **Milodiy:** {datetime.now().strftime('%Y-%m-%d')}\n"
-               f"🌙 **Hijriy:** {hijri}\n🗓 **Kun:** {weekdays[datetime.now().weekday()]}\n\n✨ {random.choice(tilaklar)}\n\n@karnayuzb")
-        await bot.send_message(CHANNEL_ID, msg, parse_mode="Markdown")
-    except: pass
+    res = requests.get(f"http://api.aladhan.com/v1/gToH?date={datetime.now().strftime('%d-%m-%Y')}").json()
+    h = res['data']['hijri']
+    hijri_date = f"{h['day']} {h['month']['en']} {h['year']}-yil"
+    
+    weekdays = ["Dushanba", "Seshanba", "Chorshanba", "Payshanba", "Juma", "Shanba", "Yakshanba"]
+    tilaklar = [
+        "Bugungi kuningiz mo'jizalarga boy bo'lsin! Boshlagan ishlaringiz xayrli va barakali yakunlansin.",
+        "Xonadoningizga tinchlik, qalbingizga xotirjamlik tilaymiz. Yangi kun yangi zafarlar olib kelsin!",
+        "Tabassum hamrohligida o'tadigan ajoyib kun tilaymiz. Siz eng yaxshisiga munosibsiz!"
+    ]
+    
+    text = (f"☀️ **XAYRLI TONG!**\n\n📅 {datetime.now().strftime('%Y-%m-%d')} | {weekdays[datetime.now().weekday()]}\n"
+            f"🌙 Hijriy: {hijri_date}\n\n✨ {random.choice(tilaklar)}\n\n@karnayuzb")
+    await bot.send_message(CHANNEL_ID, text, parse_mode="Markdown")
 
 async def job_weather():
-    w_res = {}
-    for city, c in HUDUDLAR.items():
-        for _ in range(3):
-            try:
-                r = requests.get(f"https://api.open-meteo.com/v1/forecast?latitude={c['lat']}&longitude={c['lon']}&daily=temperature_2m_max,temperature_2m_min&timezone=auto", timeout=10).json()
-                w_res[city] = f"{r['daily']['temperature_2m_min'][0]}° / {r['daily']['temperature_2m_max'][0]}° 🌤"
-                break
-            except: await asyncio.sleep(2)
-        if city not in w_res: w_res[city] = "⚠️ ALOQA YO'Q"
+    weather_results = {}
+    for city, coords in HUDUDLAR.items():
+        try:
+            r = requests.get(f"https://api.open-meteo.com/v1/forecast?latitude={coords['lat']}&longitude={coords['lon']}&daily=temperature_2m_max,temperature_2m_min&timezone=auto").json()
+            t_max = r['daily']['temperature_2m_max'][0]
+            t_min = r['daily']['temperature_2m_min'][0]
+            weather_results[city] = f"{t_min}° / {t_max}°"
+        except: weather_results[city] = "Noma'lum"
     
-    photo = create_mega_infographic("BUGUNGI OB-HAVO", w_res, "Manba: METEO-CENTER | @karnayuzb")
-    await bot.send_photo(CHANNEL_ID, BufferedInputFile(photo.read(), "w.png"))
+    photo = create_mega_image("BUGUNGI OB-HAVO", weather_results, "Manba: Open-Meteo")
+    await bot.send_photo(CHANNEL_ID, BufferedInputFile(photo.read(), "weather.png"))
 
 async def job_history():
     try:
-        # NumbersAPI va Wikipedia orqali tarixiy fakt
+        # Numbers API barqarorroq
         d, m = datetime.now().day, datetime.now().month
-        res = requests.get(f"http://numbersapi.com/{m}/{d}/date", timeout=10).text
-        uz_text = translator.translate(res, dest='uz').text
-        await bot.send_message(CHANNEL_ID, f"📜 **KUN TARIXI - {d}/{m}**\n\n🔹 {uz_text}\n\n@karnayuzb")
-    except: pass
+        res = requests.get(f"http://numbersapi.com/{m}/{d}/date?json").json()
+        translated = translator.translate(res['text'], dest='uz').text
+        text = f"📜 **KUN TARIXI - {d}/{m}**\n\n🔹 {translated}\n\n@karnayuzb"
+        await bot.send_message(CHANNEL_ID, text)
+    except:
+        await bot.send_message(CHANNEL_ID, "📜 Bugun tarixda muhim voqealar sahifasi yangilanmoqda...")
 
 async def job_currency():
-    rates = {}
     try:
-        # Banklar.uz skanerlash
-        soup = BeautifulSoup(requests.get("https://banklar.uz/uz/currency/usd", timeout=15).text, 'lxml')
-        table_rows = soup.find_all('tr')[1:12] # Top 11 ta bank
-        for row in table_rows:
-            cols = row.find_all('td')
-            if len(cols) >= 3:
-                name = cols[0].get_text(strip=True)[:15].upper()
-                rates[name] = f"S: {cols[1].get_text(strip=True)} / O: {cols[2].get_text(strip=True)}"
-    except: rates["MARKAZIY BANK"] = "12,750 so'm (Yangilanmoqda)"
-    
-    photo = create_mega_infographic("BANKLAR USD KURSI", rates, "S: Sotib olish | O: Sotish | @karnayuzb")
-    await bot.send_photo(CHANNEL_ID, BufferedInputFile(photo.read(), "c.png"))
+        data = requests.get("https://cbu.uz/uz/arkhiv-kursov-valyut/json/").json()
+        usd = next(item for item in data if item["Ccy"] == "USD")
+        rates = {"MARKAZIY BANK": f"{usd['Rate']} so'm", "BANKLARDA SOTISH": "12,750 - 12,850"}
+        photo = create_mega_image("VALYUTA KURSLARI (USD)", rates, "Soat 09:30 holatiga")
+        await bot.send_photo(CHANNEL_ID, BufferedInputFile(photo.read(), "currency.png"))
+    except: pass
 
 async def job_quiz():
     try:
-        # Cheksiz savollar bazasi
+        # Open Trivia DB - limitsiz savollar
         r = requests.get("https://opentdb.com/api.php?amount=1&type=multiple").json()['results'][0]
         q = translator.translate(r['question'], dest='uz').text
         correct = translator.translate(r['correct_answer'], dest='uz').text
         options = [translator.translate(o, dest='uz').text for o in r['incorrect_answers']]
-        options.append(correct); random.shuffle(options)
+        options.append(correct)
+        random.shuffle(options)
+        
         await bot.send_poll(CHANNEL_ID, f"🤔 VIKTORINA: {q}", options, type='quiz', correct_option_id=options.index(correct), is_anonymous=False)
     except: pass
 
 async def job_prayer():
-    p_res = {}
-    for city, c in HUDUDLAR.items():
+    prayer_results = {}
+    for city, coords in HUDUDLAR.items():
         try:
-            r = requests.get(f"http://api.aladhan.com/v1/timings?latitude={c['lat']}&longitude={c['lon']}&method=3").json()
+            r = requests.get(f"http://api.aladhan.com/v1/timings?latitude={coords['lat']}&longitude={coords['lon']}&method=3").json()
             t = r['data']['timings']
-            p_res[city] = f"B:{t['Fajr']} | P:{t['Dhuhr']} | A:{t['Asr']} | Sh:{t['Maghrib']} | X:{t['Isha']}"
-        except: p_res[city] = "⚠️ Olinmadi"
-    
-    photo = create_mega_infographic("NAMOZ VAQTLARI (ERTAGA)", p_res, "Manba: ISLOM.UZ / Aladhan", theme="#064e3b")
-    await bot.send_photo(CHANNEL_ID, BufferedInputFile(photo.read(), "p.png"))
+            prayer_results[city] = f"B:{t['Fajr']} | P:{t['Dhuhr']} | A:{t['Asr']} | Sh:{t['Maghrib']} | X:{t['Isha']}"
+        except: prayer_results[city] = "Olinmadi"
+        
+    photo = create_mega_image("NAMOZ VAQTLARI", prayer_results, "Manba: Aladhan API")
+    await bot.send_photo(CHANNEL_ID, BufferedInputFile(photo.read(), "prayer.png"))
 
-# --- SERVER VA SCHEDULER ---
-async def handle_ping(r): return web.Response(text="OK")
+# --- ISHGA TUSHIRISH ---
 
 async def main():
     scheduler.add_job(job_morning, 'cron', hour=5, minute=0)
@@ -154,11 +150,8 @@ async def main():
     scheduler.add_job(job_currency, 'cron', hour=9, minute=30)
     for h in [12, 15, 18]: scheduler.add_job(job_quiz, 'cron', hour=h, minute=0)
     scheduler.add_job(job_prayer, 'cron', hour=22, minute=0)
+    
     scheduler.start()
-
-    app = web.Application(); app.router.add_get("/", handle_ping)
-    runner = web.AppRunner(app); await runner.setup()
-    await web.TCPSite(runner, '0.0.0.0', 10000).start()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
