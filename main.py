@@ -103,7 +103,7 @@ scheduler.add_job(job_morning, 'cron', hour=5, minute=0)
 scheduler.add_job(job_weather, 'cron', hour=6, minute=0)
 scheduler.add_job(job_facts, 'cron', hour=7, minute=0)
 scheduler.add_job(job_motivation, 'cron', hour=9, minute=30)
-for h in [12, 15, 19]: scheduler.add_job(job_quiz, 'cron', hour=h, minute=0)
+for h in [12, 15, 18]: scheduler.add_job(job_quiz, 'cron', hour=h, minute=0)
 scheduler.start()
 
 if __name__ == "__main__":
