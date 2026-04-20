@@ -1,7 +1,5 @@
 pyTelegramBotAPI
 requests
-beautifulsoup4
-Pillow
 googletrans==3.1.0a0
 apscheduler
 pytz
