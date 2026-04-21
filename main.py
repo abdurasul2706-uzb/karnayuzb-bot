@@ -31,11 +31,11 @@ HUDUDLAR = {
     "Urganch": {"lat": 41.55, "lon": 60.63}
 }
 
-# --- VAZIFALAR ---
+# --- FUNKSIYALAR ---
 
-def job_morning(): # 05:00 - Xayrli tong
+def job_morning(): # 05:00 - Xayrli tong va Hijriy sana
     now = datetime.now(tashkent_tz)
-    weekday_uz = WEEKDAYS_UZ.get(now.strftime('%A'), now.strftime('%A'))
+    weekday = WEEKDAYS_UZ.get(now.strftime('%A'), now.strftime('%A'))
     try:
         r = requests.get(f"http://api.aladhan.com/v1/gToH?date={now.strftime('%d-%m-%Y')}").json()
         h = r['data']['hijri']
@@ -44,45 +44,43 @@ def job_morning(): # 05:00 - Xayrli tong
 
     tilaklar = [
         "Bugun shunday kun bo'lsinki, hatto eng kichik orzuingiz ham ushalsin! ✨",
-        "Ertalabki rejalaringiz barakali, kuningiz esa quvonchli o'tsin! 🌟",
+        "Yangi kunni tabassum bilan kutib oling, u sizga baxt ulashadi! 🌟",
         "Siz bugun har qachongidan ham kuchlisiz, ishlaringizda zafarlar tilaymiz! 💪"
     ]
     
     msg = (f"☀️ **XAYRLI TONG, AZIZ OBUNACHI!**\n\n"
            f"📅 Milodiy: {now.strftime('%Y-%m-%d')}\n"
            f"🌙 Hijriy: {hijri_txt}\n"
-           f"🗓 Hafta kuni: {weekday_uz}\n\n"
+           f"🗓 Hafta kuni: {weekday}\n\n"
            f"✨ {random.choice(tilaklar)}\n\n@karnayuzb")
     bot.send_message(CHANNEL_ID, msg, parse_mode="Markdown")
 
-def job_weather(): # 06:00 - Ob-havo (Hamma viloyatlar)
+def job_weather(): # 06:00 - Ob-havo (Barcha viloyatlar)
     text = "🌤 **BUGUNGI OB-HAVO MA'LUMOTLARI**\n\n"
     for city, coord in HUDUDLAR.items():
         try:
             r = requests.get(f"https://api.open-meteo.com/v1/forecast?latitude={coord['lat']}&longitude={coord['lon']}&daily=temperature_2m_max,temperature_2m_min&timezone=auto").json()
-            t_min = r['daily']['temperature_2m_min'][0]
-            t_max = r['daily']['temperature_2m_max'][0]
+            t_min, t_max = r['daily']['temperature_2m_min'][0], r['daily']['temperature_2m_max'][0]
             text += f"📍 {city}: {t_min}° / {t_max}°\n"
-        except: text += f"📍 {city}: Ma'lumot aniqlanmoqda...\n"
-    
+        except: text += f"📍 {city}: Ma'lumot yangilanmoqda...\n"
     text += "\n@karnayuzb"
     bot.send_message(CHANNEL_ID, text, parse_mode="Markdown")
 
 def job_facts(): # 07:00 - Cheksiz Faktlar
     try:
-        res = requests.get("https://uselessfacts.jsph.pl/random.json?language=en").json()
-        uz_fact = translator.translate(res['text'], dest='uz').text
+        r = requests.get("https://uselessfacts.jsph.pl/random.json?language=en").json()
+        uz_fact = translator.translate(r['text'], dest='uz').text
         bot.send_message(CHANNEL_ID, f"💡 **BILASIZMI?**\n\n{uz_fact}\n\n@karnayuzb")
     except: pass
 
 def job_motivation(): # 09:30 - Cheksiz Motivatsiya
     try:
-        res = requests.get("https://api.quotable.io/random?tags=wisdom|success").json()
-        uz_quote = translator.translate(f"{res['content']} — {res['author']}", dest='uz').text
+        r = requests.get("https://api.quotable.io/random?tags=wisdom|success").json()
+        uz_quote = translator.translate(f"{r['content']} — {r['author']}", dest='uz').text
         bot.send_message(CHANNEL_ID, f"🚀 **KUN MOTIVATSIYASI**\n\n{uz_quote}\n\n@karnayuzb")
     except: pass
 
-def job_quiz(): # 12:00, 15:00, 18:00 - Cheksiz Viktorina
+def job_quiz(): # 12:00, 15:00, 18:00 - Cheksiz Viktorinalar
     try:
         r = requests.get("https://opentdb.com/api.php?amount=1&type=multiple").json()['results'][0]
         q = translator.translate(r['question'], dest='uz').text
