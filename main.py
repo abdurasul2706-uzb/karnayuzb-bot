@@ -52,7 +52,7 @@ SOURCES = [
     ('TASS', 'https://tass.com/rss/v2.xml'),
     ('Xabar.uz', 'https://xabar.uz/uz/rss'),
     ('UzNews.uz', 'https://uznews.uz/uz/rss'),
-    ('Lifehacker', 'https://lifehacker.com/rss'), ('BigThink', 'https://bigthink.com/feed/'),
+    ('BigThink', 'https://bigthink.com/feed/'),
     ('Digital Trends', 'https://www.digitaltrends.com/feed/'),
     ('Podrobno.uz', 'https://podrobno.uz/rss/all/'),
     ('Bilasizmi', 'https://www.howstuffworks.com/rss.xml'), ('Faktlar', 'https://www.factslides.com/rss.xml'),
