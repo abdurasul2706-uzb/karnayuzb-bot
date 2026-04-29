@@ -68,8 +68,8 @@ SOURCES = [
     ('RIA Novosti', 'https://ria.ru/export/rss2/world/index.xml'), 
     ('Championat.asia', 'https://championat.asia/uz/news/rss'), 
     ('The Economist', 'https://www.economist.com/international/rss.xml'),
-    ('Bloomberg', 'https://www.bloomberg.com/politics/feeds/site.xml'), ('NASA News', 'https://www.nasa.gov/rss/dyn/breaking_news.rss'), 
-    ('Nature', 'https://www.nature.com/nature.rss'), ('ScienceDaily', 'https://www.sciencedaily.com/rss/all.xml'),
+    ('NASA News', 'https://www.nasa.gov/rss/dyn/breaking_news.rss'), 
+    ('ScienceDaily', 'https://www.sciencedaily.com/rss/all.xml'),
     ('National Geographic', 'https://www.nationalgeographic.com/rss/index.html'),
 ]
 
