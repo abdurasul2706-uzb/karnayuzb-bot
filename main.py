@@ -57,7 +57,7 @@ SOURCES = [
     ('ESPN Soccer', 'https://www.espn.com/espn/rss/soccer/news'),
     ('Anhor.uz', 'https://anhor.uz/feed/'),('Mental Floss', 'https://www.mentalfloss.com/rss.xml'),
     ('KnowledgeNuts', 'https://knowledgenuts.com/feed/'),
-    ('Today I Found Out', 'https://www.todayifoundout.com/index.xml')
+    ('Today I Found Out', 'https://www.todayifoundout.com/index.xml'), 
     ('BBC News', 'http://feeds.bbci.co.uk/news/world/rss.xml'), 
     ('The Guardian', 'https://www.theguardian.com/world/rss'), ('Reuters', 'https://www.reutersagency.com/feed/?best-topics=world-news&post_type=best'), 
     ('Al Jazeera', 'https://www.aljazeera.com/xml/rss/all.xml'),
