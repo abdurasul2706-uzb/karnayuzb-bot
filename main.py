@@ -51,7 +51,7 @@ def get_max_caption(title, body, source_name):
 SOURCES = [ 
     ('TASS', 'https://tass.com/rss/v2.xml'),('Zen Habits', 'https://zenhabits.net/feed/'),
     ('Tiny Buddha', 'https://tinybuddha.com/feed/'),
-    ('Success Magazine', 'https://www.success.com/feed/')
+    ('Success Magazine', 'https://www.success.com/feed/'), 
     ('Digital Trends', 'https://www.digitaltrends.com/feed/'), 
     ('BBC Uzbek', 'https://www.bbc.com/uzbek/index.xml'),
     ('ESPN Soccer', 'https://www.espn.com/espn/rss/soccer/news'),
