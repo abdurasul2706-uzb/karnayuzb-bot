@@ -49,25 +49,20 @@ def get_max_caption(title, body, source_name):
 
 # 4. MANBALAR (48 TA MANBA RO'YXATI)
 SOURCES = [ 
-    ('TASS', 'https://tass.com/rss/v2.xml'),
-    ('Xabar.uz', 'https://xabar.uz/uz/rss'),
-    ('UzNews.uz', 'https://uznews.uz/uz/rss'),
-    ('BigThink', 'https://bigthink.com/feed/'),
-    ('Digital Trends', 'https://www.digitaltrends.com/feed/'),
-    ('Podrobno.uz', 'https://podrobno.uz/rss/all/'),
-    ('Bilasizmi', 'https://www.howstuffworks.com/rss.xml'), ('Faktlar', 'https://www.factslides.com/rss.xml'),
+    ('TASS', 'https://tass.com/rss/v2.xml'),('Zen Habits', 'https://zenhabits.net/feed/'),
+    ('Tiny Buddha', 'https://tinybuddha.com/feed/'),
+    ('Success Magazine', 'https://www.success.com/feed/')
+    ('Digital Trends', 'https://www.digitaltrends.com/feed/'), 
     ('BBC Uzbek', 'https://www.bbc.com/uzbek/index.xml'),
-    ('Championat', 'https://www.championat.com/xml/rss/all.xml'),
     ('ESPN Soccer', 'https://www.espn.com/espn/rss/soccer/news'),
-    ('Anhor.uz', 'https://anhor.uz/feed/'), ('CNN World', 'http://rss.cnn.com/rss/edition_world.rss'), 
+    ('Anhor.uz', 'https://anhor.uz/feed/'),('Mental Floss', 'https://www.mentalfloss.com/rss.xml'),
+    ('KnowledgeNuts', 'https://knowledgenuts.com/feed/'),
+    ('Today I Found Out', 'https://www.todayifoundout.com/index.xml')
     ('BBC News', 'http://feeds.bbci.co.uk/news/world/rss.xml'), 
     ('The Guardian', 'https://www.theguardian.com/world/rss'), ('Reuters', 'https://www.reutersagency.com/feed/?best-topics=world-news&post_type=best'), 
     ('Al Jazeera', 'https://www.aljazeera.com/xml/rss/all.xml'),
     ('DW News', 'https://rss.dw.com/xml/rss-en-all'),
-    ('ABC News', 'https://abcnews.go.com/abcnews/internationalheadlines'), 
-    ('RIA Novosti', 'https://ria.ru/export/rss2/world/index.xml'), 
-    ('Championat.asia', 'https://championat.asia/uz/news/rss'), 
-    ('The Economist', 'https://www.economist.com/international/rss.xml'),
+    ('ABC News', 'https://abcnews.go.com/abcnews/internationalheadlines'),
     ('NASA News', 'https://www.nasa.gov/rss/dyn/breaking_news.rss'), 
     ('ScienceDaily', 'https://www.sciencedaily.com/rss/all.xml'),
     ('National Geographic', 'https://www.nationalgeographic.com/rss/index.html'),
